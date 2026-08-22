@@ -298,6 +298,11 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script>
+// Dynamic API Endpoint Discovery: Localhost vs Production (Hugging Face Spaces)
+const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+  ? ""
+  : "https://bapallinaveen60-precipcast-api.hf.space";
+
 // Major Cities across India
 const CITIES = {
   "Karnataka": [{name:"Bengaluru", lat:12.97, lon:77.59}, {name:"Mysuru", lat:12.30, lon:76.65}],
@@ -499,7 +504,7 @@ function updateLegend() {
 // Load backend data
 async function initPlatform() {
   try {
-    const res = await fetch("/api/timestamps");
+    const res = await fetch(`${API_BASE}/api/timestamps`);
     const data = await res.json();
     if (data.status === "success" && data.timestamps.length > 0) {
       timestamps = data.timestamps;
@@ -536,7 +541,7 @@ async function loadOverlay() {
   const ts = timestamps[currentIndex];
   if (!ts) return;
   
-  const overlayUrl = `/api/overlay?filename=${encodeURIComponent(ts.filename)}&layer=${currentLayer}&t=${Date.now()}`;
+  const overlayUrl = `${API_BASE}/api/overlay?filename=${encodeURIComponent(ts.filename)}&layer=${currentLayer}&t=${Date.now()}`;
   if (imageOverlay) map.removeLayer(imageOverlay);
   
   imageOverlay = L.imageOverlay(overlayUrl, indiaBounds, { opacity: 0.88 }).addTo(map);
@@ -547,7 +552,7 @@ async function loadSummaryForecast() {
   if (!ts) return;
   
   try {
-    const res = await fetch(`/api/forecast?filename=${encodeURIComponent(ts.filename)}`);
+    const res = await fetch(`${API_BASE}/api/forecast?filename=${encodeURIComponent(ts.filename)}`);
     const data = await res.json();
     if (data.status === "success") {
       const s = data.summary;
@@ -571,7 +576,7 @@ async function queryLocationForecast() {
   document.getElementById("fc-coords").textContent = `${currentPoint.lat.toFixed(2)}° N, ${currentPoint.lon.toFixed(2)}° E`;
   
   try {
-    const res = await fetch(`/api/query?lat=${currentPoint.lat}&lon=${currentPoint.lon}&filename=${encodeURIComponent(ts.filename)}`);
+    const res = await fetch(`${API_BASE}/api/query?lat=${currentPoint.lat}&lon=${currentPoint.lon}&filename=${encodeURIComponent(ts.filename)}`);
     const data = await res.json();
     if (data.status === "success") {
       const p = data.prediction;
