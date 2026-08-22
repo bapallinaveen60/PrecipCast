@@ -1,5 +1,6 @@
 import os
 import sys
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,7 +33,7 @@ with demo:
     gr.Markdown("# 🌧️ PRECIPCAST — INSAT-3R Deep Learning Precipitation Platform API")
     gr.Markdown("Flask API routes (`/api/timestamps`, `/api/forecast`, `/api/overlay`, `/api/query`) are mounted and live!")
 
-app = gr.mount_gradio_app(app=fastapi_app, blocks=demo, path="/")
+app = gr.mount_gradio_app(app=fastapi_app, blocks=demo, path="/gradio")
 
 if __name__ == "__main__":
-    app.launch()
+    uvicorn.run(app, host="0.0.0.0", port=7860)
