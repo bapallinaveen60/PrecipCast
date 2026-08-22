@@ -54,11 +54,21 @@
   .info-card .label { font-size: 12px; color: #64748b; font-weight: 500; display: flex; align-items: center; gap: 6px; }
   .info-card .value { font-size: 13px; font-weight: 700; color: #1e293b; }
 
-  /* Toggle Bars & Containers */
-  .toggle-bar { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px; cursor: pointer; transition: background .2s ease; margin-top: 6px; user-select: none; }
+  /* Visual Sliding Toggle Switch Bar */
+  .toggle-bar { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: background .2s ease; margin-top: 6px; user-select: none; }
   .toggle-bar:hover { background: #dbeafe; }
   .toggle-box { display: none; margin-top: 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.5; color: #444; }
   .toggle-box.open { display: block; }
+
+  /* Sliding Toggle Switch CSS Widget */
+  .switch-widget { display: flex; align-items: center; gap: 8px; }
+  .switch-lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+  .switch { position: relative; display: inline-block; width: 42px; height: 22px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 22px; }
+  .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  input:checked + .slider { background-color: #0288d1; }
+  input:checked + .slider:before { transform: translateX(20px); }
 
   /* Precip Probability Items */
   .prob-row { margin-bottom: 8px; }
@@ -197,14 +207,20 @@
       </div>
     </div>
 
-    <!-- Toggle Switch for All Precipitation Types & Probabilities -->
+    <!-- VISUAL SLIDING TOGGLE SWITCH: All Precipitation Types & Probabilities -->
     <div>
       <div id="precip-toggle-btn" class="toggle-bar">
         <div style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:#1d4ed8">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
           <span>All Precipitation Types (%)</span>
         </div>
-        <span id="precip-arrow-icon" style="font-size:12px;color:#1d4ed8;font-weight:bold">Show ▼</span>
+        <div class="switch-widget">
+          <span id="precip-switch-txt" class="switch-lbl">OFF</span>
+          <label class="switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="chk-precip">
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
 
       <!-- Collapsible Precipitation Types Breakdown -->
@@ -232,14 +248,20 @@
       </div>
     </div>
 
-    <!-- Toggle Switch for Technical Model Details -->
+    <!-- VISUAL SLIDING TOGGLE SWITCH: Technical Model Diagnostics -->
     <div>
       <div id="tech-toggle-btn" class="toggle-bar">
         <div style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:#1d4ed8">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>Technical Model Diagnostics</span>
         </div>
-        <span id="tech-arrow-icon" style="font-size:12px;color:#1d4ed8;font-weight:bold">Show ▼</span>
+        <div class="switch-widget">
+          <span id="tech-switch-txt" class="switch-lbl">OFF</span>
+          <label class="switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="chk-tech">
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
 
       <!-- Collapsible Technical Breakdown -->
@@ -296,39 +318,48 @@ let currentPoint = { lat: 12.97, lon: 77.59, name: "Bengaluru", state: "Karnatak
 let isPlaying = false;
 let playTimer = null;
 
-let isTechOpen = false;
-let isPrecipOpen = false;
-
-// Toggle Logics
-const techBtn = document.getElementById("tech-toggle-btn");
-const techBox = document.getElementById("tech-details-box");
-const techArrow = document.getElementById("tech-arrow-icon");
-
-techBtn.addEventListener("click", () => {
-  isTechOpen = !isTechOpen;
-  if (isTechOpen) {
-    techBox.classList.add("open");
-    techArrow.textContent = "Hide ▲";
-  } else {
-    techBox.classList.remove("open");
-    techArrow.textContent = "Show ▼";
-  }
-});
-
+// Sliding Toggle Switch Controllers
+const chkPrecip = document.getElementById("chk-precip");
 const precipBtn = document.getElementById("precip-toggle-btn");
 const precipBox = document.getElementById("precip-details-box");
-const precipArrow = document.getElementById("precip-arrow-icon");
+const precipTxt = document.getElementById("precip-switch-txt");
 
-precipBtn.addEventListener("click", () => {
-  isPrecipOpen = !isPrecipOpen;
-  if (isPrecipOpen) {
+function setPrecipToggle(open) {
+  chkPrecip.checked = open;
+  if (open) {
     precipBox.classList.add("open");
-    precipArrow.textContent = "Hide ▲";
+    precipTxt.textContent = "ON";
+    precipTxt.style.color = "#0288d1";
   } else {
     precipBox.classList.remove("open");
-    precipArrow.textContent = "Show ▼";
+    precipTxt.textContent = "OFF";
+    precipTxt.style.color = "#64748b";
   }
-});
+}
+
+precipBtn.addEventListener("click", () => setPrecipToggle(!chkPrecip.checked));
+chkPrecip.addEventListener("change", () => setPrecipToggle(chkPrecip.checked));
+
+const chkTech = document.getElementById("chk-tech");
+const techBtn = document.getElementById("tech-toggle-btn");
+const techBox = document.getElementById("tech-details-box");
+const techTxt = document.getElementById("tech-switch-txt");
+
+function setTechToggle(open) {
+  chkTech.checked = open;
+  if (open) {
+    techBox.classList.add("open");
+    techTxt.textContent = "ON";
+    techTxt.style.color = "#0288d1";
+  } else {
+    techBox.classList.remove("open");
+    techTxt.textContent = "OFF";
+    techTxt.style.color = "#64748b";
+  }
+}
+
+techBtn.addEventListener("click", () => setTechToggle(!chkTech.checked));
+chkTech.addEventListener("change", () => setTechToggle(chkTech.checked));
 
 // Initialize Leaflet Map over India
 const map = L.map('map', { center: [22.0, 80.0], zoom: 5 });
