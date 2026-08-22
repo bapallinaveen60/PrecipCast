@@ -3,6 +3,7 @@ import sys
 import time
 import traceback
 from wsgiref.simple_server import make_server
+from werkzeug.exceptions import HTTPException
 
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
@@ -49,6 +50,9 @@ def get_prediction_for_file(filepath):
 
 @app.errorhandler(Exception)
 def handle_exception(e):
+    # Pass through standard HTTP status exceptions (404 Not Found, 405 Method Not Allowed, etc.)
+    if isinstance(e, HTTPException):
+        return e
     print("API SERVER EXCEPTION OCCURRED:", flush=True)
     traceback.print_exc()
     sys.stdout.flush()
