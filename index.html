@@ -14,7 +14,7 @@
   .badge svg { color: #0288d1; }
   
   /* Desktop Layout */
-  .app-grid { display: grid; grid-template-columns: 310px 1fr 340px; grid-template-rows: 1fr auto; grid-template-areas: "sidebar map forecast" "timeline timeline timeline"; height: calc(100vh - 65px); }
+  .app-grid { display: grid; grid-template-columns: 310px 1fr 350px; grid-template-rows: 1fr auto; grid-template-areas: "sidebar map forecast" "timeline timeline timeline"; height: calc(100vh - 65px); }
   .sidebar { grid-area: sidebar; overflow-y: auto; padding: 16px; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fafafa; }
   .map-wrap { grid-area: map; position: relative; background: #111827; min-height: 400px; }
   #map { position: absolute; inset: 0; background: #111827; }
@@ -23,8 +23,8 @@
   .legend { position: absolute; bottom: 20px; left: 14px; z-index: 500; width: 230px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); max-width: calc(100% - 40px); }
   .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 6px; color: #222; }
   .legend-dot { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,0.1); }
-  .forecast-panel { grid-area: forecast; overflow-y: auto; padding: 16px; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fff; }
-  .forecast-type { font-weight: 700; font-size: 24px; line-height: 1.15; margin: 6px 0 0; color: #1a237e; }
+  .forecast-panel { grid-area: forecast; overflow-y: auto; padding: 16px; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 14px; background: #fff; }
+  .forecast-type { font-weight: 700; font-size: 24px; line-height: 1.15; margin: 4px 0 0; color: #1a237e; }
   .conf-track { height: 8px; border-radius: 4px; background: #e0e0e0; overflow: hidden; margin-top: 6px; }
   .conf-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
   .loc-line { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #333; }
@@ -41,6 +41,17 @@
   .btn-primary:hover { background: #0277bd; }
   .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ccc; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
   .stat-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+  /* User Info Cards */
+  .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .info-card .label { font-size: 12px; color: #64748b; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .info-card .value { font-size: 13px; font-weight: 700; color: #1e293b; }
+
+  /* Technical Toggle Bar */
+  .tech-toggle-bar { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px; cursor: pointer; transition: background .2s ease; margin-top: 6px; user-select: none; }
+  .tech-toggle-bar:hover { background: #dbeafe; }
+  .tech-details-box { display: none; margin-top: 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.5; color: #444; }
+  .tech-details-box.open { display: block; }
 
   /* Tablet Responsiveness (768px - 1024px) */
   @media (max-width: 1024px) {
@@ -61,11 +72,7 @@
   @media (max-width: 768px) {
     header.nav { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px; }
     .nav-badges { margin-left: 0; width: 100%; justify-content: space-between; }
-    .app-grid {
-      display: flex;
-      flex-direction: column;
-      height: auto;
-    }
+    .app-grid { display: flex; flex-direction: column; height: auto; }
     .map-wrap { height: 420px; min-height: 420px; width: 100%; order: 1; }
     .timeline-bar { order: 2; padding: 12px 14px; }
     .sidebar { order: 3; border-right: none; border-bottom: 1px solid #e0e0e0; }
@@ -140,35 +147,61 @@
   <!-- Right Forecast Panel -->
   <aside class="forecast-panel">
     <div>
-      <div style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.5px">Selected Location Forecast</div>
+      <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;font-weight:600">Selected Location Forecast</div>
       <h3 id="fc-type" class="forecast-type">Calculating...</h3>
+      
+      <div class="loc-line" style="margin-top:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="fc-loc">Bengaluru, Karnataka</span>
+      </div>
+      <div style="font-size:12px;color:#64748b;margin-left:22px" id="fc-coords">12.97° N, 77.59° E</div>
+
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px">
-        <span style="font-size:12px;color:#666">ML Prediction Confidence</span>
-        <span id="fc-conf-num" style="font-weight:700;font-size:16px;color:#1a237e">--%</span>
+        <span style="font-size:12px;color:#64748b;font-weight:500">AI Confidence</span>
+        <span id="fc-conf-num" style="font-weight:700;font-size:15px;color:#1e293b">--%</span>
       </div>
       <div class="conf-track"><div id="fc-conf-fill" class="conf-fill" style="width:0%;background:#0288d1"></div></div>
     </div>
 
-    <div>
-      <div class="loc-line"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="fc-loc">Bengaluru, Karnataka</span></div>
-      <div style="font-size:12px;color:#666;margin-left:22px" id="fc-coords">12.97° N, 77.59° E</div>
+    <!-- Simple User Summary Cards -->
+    <div style="margin-top:4px">
+      <div class="info-card">
+        <span class="label">☀️ Cloud Temperature</span>
+        <span class="value" id="user-temp">--</span>
+      </div>
+      <div class="info-card">
+        <span class="label">💧 Rain Probability</span>
+        <span class="value" id="user-prob">--</span>
+      </div>
+      <div class="info-card">
+        <span class="label">☁️ Weather Condition</span>
+        <span class="value" id="user-condition">--</span>
+      </div>
     </div>
 
-    <hr style="border:none;border-top:1px solid #e0e0e0;margin:0">
-
+    <!-- Toggle Switch for Technical Model Details -->
     <div>
-      <h5 style="margin-bottom:6px;font-size:13px;color:#333">Classification Details</h5>
-      <div style="font-size:13px;line-height:1.5;color:#444" id="fc-desc">Select a location or click anywhere on the map to query model predictions.</div>
-    </div>
+      <div id="tech-toggle-btn" class="tech-toggle-bar">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:#1d4ed8">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Technical Model Details</span>
+        </div>
+        <span id="tech-arrow-icon" style="font-size:12px;color:#1d4ed8;font-weight:bold">Show ▼</span>
+      </div>
 
-    <hr style="border:none;border-top:1px solid #e0e0e0;margin:0">
+      <!-- Collapsible Technical Breakdown -->
+      <div id="tech-details-box" class="tech-details-box">
+        <h5 style="margin:0 0 6px;font-size:12px;color:#1e293b;font-weight:700">Model Breakdown</h5>
+        <div id="fc-desc">Select a location or click on the map to query model predictions.</div>
 
-    <div>
-      <h5 style="margin-bottom:8px;font-size:13px;color:#333">Cascaded Model Workflow</h5>
-      <div style="font-size:12px;color:#555;line-height:1.5">
-        1. <strong>INSAT-3R Channels</strong>: [TIR1, TIR2, WV, MIR] BT Kelvin.<br>
-        2. <strong>Model 1</strong>: Binary Rain / No-Rain segmentation.<br>
-        3. <strong>Model 2 & 3</strong>: Rain pixels route to Stratiform/Convective and 4-class sub-classes (incl. Shallow Rain).
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:10px 0 8px">
+
+        <h5 style="margin:0 0 6px;font-size:12px;color:#1e293b;font-weight:700">Cascaded Model Workflow</h5>
+        <div style="font-size:11px;color:#64748b;line-height:1.5">
+          1. <strong>INSAT-3R Channels</strong>: [TIR1, TIR2, WV, MIR] BT Kelvin.<br>
+          2. <strong>Model 1</strong>: Binary Rain / No-Rain segmentation.<br>
+          3. <strong>Model 2 & 3</strong>: Rain pixels route to Stratiform/Convective and 4-class sub-classes (incl. Shallow Rain).
+        </div>
       </div>
     </div>
   </aside>
@@ -209,6 +242,23 @@ let currentLayer = "rain";
 let currentPoint = { lat: 12.97, lon: 77.59, name: "Bengaluru", state: "Karnataka" };
 let isPlaying = false;
 let playTimer = null;
+let isTechOpen = false;
+
+// Technical Toggle Logic
+const techBtn = document.getElementById("tech-toggle-btn");
+const techBox = document.getElementById("tech-details-box");
+const techArrow = document.getElementById("tech-arrow-icon");
+
+techBtn.addEventListener("click", () => {
+  isTechOpen = !isTechOpen;
+  if (isTechOpen) {
+    techBox.classList.add("open");
+    techArrow.textContent = "Hide ▲";
+  } else {
+    techBox.classList.remove("open");
+    techArrow.textContent = "Show ▼";
+  }
+});
 
 // Initialize Leaflet Map over India
 const map = L.map('map', { center: [22.0, 80.0], zoom: 5 });
@@ -410,8 +460,17 @@ async function queryLocationForecast() {
       document.getElementById("fc-conf-num").textContent = `${p.confidence}%`;
       document.getElementById("fc-conf-fill").style.width = `${p.confidence}%`;
       
+      // Convert Kelvin to Celsius for human-readable display
+      const celsius = (p.tir1_bt - 273.15).toFixed(1);
+      document.getElementById("user-temp").textContent = `${celsius} °C (${p.tir1_bt} K)`;
+      document.getElementById("user-prob").textContent = `${p.rain_probability}% (${p.rain})`;
+      
+      const cond = (p.four_class !== "No Rain") ? p.four_class : ((p.stratiform_convective !== "No Rain") ? p.stratiform_convective : "Clear / No Rain");
+      document.getElementById("user-condition").textContent = cond;
+      
+      // Technical Breakdown (Collapsible)
       document.getElementById("fc-desc").innerHTML = `
-        <strong>TIR1 Temp</strong>: ${p.tir1_bt} K<br>
+        <strong>TIR1 Temp</strong>: ${p.tir1_bt} K (${celsius} °C)<br>
         <strong>Rain Mask (Model 1)</strong>: ${p.rain} (${p.rain_probability}% prob)<br>
         <strong>Rain Type (Model 2)</strong>: ${p.stratiform_convective}<br>
         <strong>Sub-Class (Model 3)</strong>: ${p.four_class}
