@@ -23,6 +23,10 @@ class INSATDataReader:
 
     def _scan_files(self):
         files = sorted(glob.glob(os.path.join(self.data_dir, "*.h5")))
+        if not files:
+            # Fallback to current working directory if insat_data is empty or files are uploaded to root
+            files = sorted(glob.glob("*.h5"))
+            
         file_map = {}
         for f in files:
             fname = os.path.basename(f)
