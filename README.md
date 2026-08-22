@@ -2,7 +2,9 @@
 
 > **PrecipCast** is an end-to-end Deep Learning precipitation classification, sub-class identification, and web-based satellite visualization platform built for INSAT-3R satellite observation data across India.
 > 
-> 📌 **Project Status**: This repository represents **Phase 1 (Version 1.0)** of the PrecipCast platform development pipeline.
+> 🌐 **Live Web Dashboard**: [https://bapallinaveen60.github.io/PrecipCast/](https://bapallinaveen60.github.io/PrecipCast/)  
+> ⚡ **PyTorch AI Engine API**: [https://naveen0720-precipcast-api.hf.space](https://naveen0720-precipcast-api.hf.space)  
+> 📌 **Project Status**: Phase 1 (Version 1.0) — Deployed & Live
 
 ---
 
@@ -19,6 +21,14 @@
 PrecipCast processes multi-spectral Thermal Infrared (TIR) and Water Vapor (WV) satellite observations from ISRO's INSAT-3R geostationary satellite to perform high-resolution spatial rain detection and detailed cloud/precipitation type classification over the Indian subcontinent ($7.0^\circ\text{N} - 37.0^\circ\text{N}, 68.0^\circ\text{E} - 97.0^\circ\text{E}$).
 
 The platform features a **3-stage cascaded Deep Learning pipeline**, a lightweight **PyTorch dynamic inference engine**, a **Flask REST API server**, and a fully **responsive Leaflet web dashboard** (optimized for Desktop, Tablet, and Mobile devices).
+
+---
+
+## 🌐 Public Live Links
+
+- **Interactive Leaflet Dashboard**: [https://bapallinaveen60.github.io/PrecipCast/](https://bapallinaveen60.github.io/PrecipCast/)
+- **Hugging Face PyTorch AI API**: [https://naveen0720-precipcast-api.hf.space](https://naveen0720-precipcast-api.hf.space)
+- **GitHub Code Repository**: [https://github.com/bapallinaveen60/PrecipCast](https://github.com/bapallinaveen60/PrecipCast)
 
 ---
 
@@ -87,7 +97,9 @@ graph TD
 PrecipCast/
 ├── index.html                   # Responsive Leaflet Interactive Web Dashboard
 ├── run.py                       # Top-level one-click launcher script
+├── app.py                       # Hugging Face Spaces FastAPI / Gradio launcher
 ├── requirements.txt             # Python dependencies
+├── Dockerfile                   # Production Docker container manifest
 ├── README.md                    # Project documentation & demo preview
 ├── prediction_rain.ipynb        # Reference prediction and visualization notebook
 ├── INSAT_animation (2).gif      # Reference animation preview
