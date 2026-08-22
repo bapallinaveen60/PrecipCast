@@ -1,12 +1,9 @@
 import os
 import sys
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-try:
-    from a2wsgi import WSGIMiddleware
-except ImportError:
-    from starlette.middleware.wsgi import WSGIMiddleware
+from a2wsgi import WSGIMiddleware
 
 # Insert server directory into Python path
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -29,3 +26,6 @@ app.add_middleware(
 
 # Mount Flask WSGI application directly on root "/"
 app.mount("/", WSGIMiddleware(flask_app))
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=7860)
