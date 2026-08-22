@@ -18,8 +18,15 @@
   .sidebar { grid-area: sidebar; overflow-y: auto; padding: 16px; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fafafa; }
   .map-wrap { grid-area: map; position: relative; background: #111827; min-height: 400px; }
   #map { position: absolute; inset: 0; background: #111827; }
-  .map-title { position: absolute; top: 14px; left: 60px; z-index: 500; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); max-width: calc(100% - 130px); }
-  .map-north { position: absolute; top: 14px; right: 14px; z-index: 500; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .map-title { position: absolute; top: 14px; left: 60px; z-index: 500; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); max-width: calc(100% - 240px); }
+  
+  /* Top-Right Map Controls (Basemap Switcher + North Arrow) */
+  .map-top-right-controls { position: absolute; top: 14px; right: 14px; z-index: 500; display: flex; align-items: center; gap: 8px; }
+  .basemap-switch { display: flex; align-items: center; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 20px; padding: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  .bm-btn { border: none; background: transparent; padding: 4px 10px; font-size: 12px; font-weight: 600; border-radius: 16px; cursor: pointer; color: #555; transition: all .2s ease; }
+  .bm-btn.active { background: #0288d1; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .map-north { background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.12); flex: none; }
+  
   .legend { position: absolute; bottom: 20px; left: 14px; z-index: 500; width: 230px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); max-width: calc(100% - 40px); }
   .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 6px; color: #222; }
   .legend-dot { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,0.1); }
@@ -47,11 +54,17 @@
   .info-card .label { font-size: 12px; color: #64748b; font-weight: 500; display: flex; align-items: center; gap: 6px; }
   .info-card .value { font-size: 13px; font-weight: 700; color: #1e293b; }
 
-  /* Technical Toggle Bar */
-  .tech-toggle-bar { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px; cursor: pointer; transition: background .2s ease; margin-top: 6px; user-select: none; }
-  .tech-toggle-bar:hover { background: #dbeafe; }
-  .tech-details-box { display: none; margin-top: 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.5; color: #444; }
-  .tech-details-box.open { display: block; }
+  /* Toggle Bars & Containers */
+  .toggle-bar { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px; cursor: pointer; transition: background .2s ease; margin-top: 6px; user-select: none; }
+  .toggle-bar:hover { background: #dbeafe; }
+  .toggle-box { display: none; margin-top: 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.5; color: #444; }
+  .toggle-box.open { display: block; }
+
+  /* Precip Probability Items */
+  .prob-row { margin-bottom: 8px; }
+  .prob-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; font-weight: 500; }
+  .prob-bar-bg { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; }
+  .prob-bar-fill { height: 100%; border-radius: 3px; transition: width .3s ease; }
 
   /* Tablet Responsiveness (768px - 1024px) */
   @media (max-width: 1024px) {
@@ -77,7 +90,7 @@
     .timeline-bar { order: 2; padding: 12px 14px; }
     .sidebar { order: 3; border-right: none; border-bottom: 1px solid #e0e0e0; }
     .forecast-panel { order: 4; border-top: none; }
-    .map-title { top: 10px; left: 50px; font-size: 12px; padding: 6px 10px; }
+    .map-title { top: 10px; left: 50px; font-size: 11px; padding: 6px 10px; max-width: calc(100% - 190px); }
     .legend { bottom: 10px; left: 10px; padding: 8px; width: 200px; font-size: 11px; }
   }
 </style>
@@ -140,7 +153,16 @@
   <section class="map-wrap">
     <div id="map"></div>
     <div class="map-title" id="map-title-text"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/></svg>Rain vs No-Rain Classification</div>
-    <div class="map-north">N↑</div>
+    
+    <!-- Top Right Controls: OSM / Satellite Switcher & North Arrow -->
+    <div class="map-top-right-controls">
+      <div class="basemap-switch">
+        <button id="bm-osm" class="bm-btn active">🗺️ OSM</button>
+        <button id="bm-sat" class="bm-btn">🛰️ Satellite</button>
+      </div>
+      <div class="map-north">N↑</div>
+    </div>
+
     <div id="legend-box" class="legend"></div>
   </section>
 
@@ -173,24 +195,55 @@
         <span class="label">💧 Rain Probability</span>
         <span class="value" id="user-prob">--</span>
       </div>
-      <div class="info-card">
-        <span class="label">☁️ Weather Condition</span>
-        <span class="value" id="user-condition">--</span>
+    </div>
+
+    <!-- Toggle Switch for All Precipitation Types & Probabilities -->
+    <div>
+      <div id="precip-toggle-btn" class="toggle-bar">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:#1d4ed8">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+          <span>All Precipitation Types (%)</span>
+        </div>
+        <span id="precip-arrow-icon" style="font-size:12px;color:#1d4ed8;font-weight:bold">Show ▼</span>
+      </div>
+
+      <!-- Collapsible Precipitation Types Breakdown -->
+      <div id="precip-details-box" class="toggle-box">
+        <div class="prob-row">
+          <div class="prob-header"><span>🔵 Stratiform Rain</span><span id="pb-strat-num">0%</span></div>
+          <div class="prob-bar-bg"><div id="pb-strat-fill" class="prob-bar-fill" style="width:0%;background:#3A86FF"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-header"><span>🔴 Deep Convective</span><span id="pb-deep-num">0%</span></div>
+          <div class="prob-bar-bg"><div id="pb-deep-fill" class="prob-bar-fill" style="width:0%;background:#D32F2F"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-header"><span>🟧 Shallow Conv (isolated)</span><span id="pb-iso-num">0%</span></div>
+          <div class="prob-bar-bg"><div id="pb-iso-fill" class="prob-bar-fill" style="width:0%;background:#FF7043"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-header"><span>🟨 Shallow Conv (non-isolated)</span><span id="pb-noniso-num">0%</span></div>
+          <div class="prob-bar-bg"><div id="pb-noniso-fill" class="prob-bar-fill" style="width:0%;background:#FFC107"></div></div>
+        </div>
+        <div class="prob-row">
+          <div class="prob-header"><span>⚪ No Rain</span><span id="pb-norain-num">0%</span></div>
+          <div class="prob-bar-bg"><div id="pb-norain-fill" class="prob-bar-fill" style="width:0%;background:#94a3b8"></div></div>
+        </div>
       </div>
     </div>
 
     <!-- Toggle Switch for Technical Model Details -->
     <div>
-      <div id="tech-toggle-btn" class="tech-toggle-bar">
+      <div id="tech-toggle-btn" class="toggle-bar">
         <div style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px;color:#1d4ed8">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span>Technical Model Details</span>
+          <span>Technical Model Diagnostics</span>
         </div>
         <span id="tech-arrow-icon" style="font-size:12px;color:#1d4ed8;font-weight:bold">Show ▼</span>
       </div>
 
       <!-- Collapsible Technical Breakdown -->
-      <div id="tech-details-box" class="tech-details-box">
+      <div id="tech-details-box" class="toggle-box">
         <h5 style="margin:0 0 6px;font-size:12px;color:#1e293b;font-weight:700">Model Breakdown</h5>
         <div id="fc-desc">Select a location or click on the map to query model predictions.</div>
 
@@ -242,9 +295,11 @@ let currentLayer = "rain";
 let currentPoint = { lat: 12.97, lon: 77.59, name: "Bengaluru", state: "Karnataka" };
 let isPlaying = false;
 let playTimer = null;
-let isTechOpen = false;
 
-// Technical Toggle Logic
+let isTechOpen = false;
+let isPrecipOpen = false;
+
+// Toggle Logics
 const techBtn = document.getElementById("tech-toggle-btn");
 const techBox = document.getElementById("tech-details-box");
 const techArrow = document.getElementById("tech-arrow-icon");
@@ -260,11 +315,50 @@ techBtn.addEventListener("click", () => {
   }
 });
 
+const precipBtn = document.getElementById("precip-toggle-btn");
+const precipBox = document.getElementById("precip-details-box");
+const precipArrow = document.getElementById("precip-arrow-icon");
+
+precipBtn.addEventListener("click", () => {
+  isPrecipOpen = !isPrecipOpen;
+  if (isPrecipOpen) {
+    precipBox.classList.add("open");
+    precipArrow.textContent = "Hide ▲";
+  } else {
+    precipBox.classList.remove("open");
+    precipArrow.textContent = "Show ▼";
+  }
+});
+
 // Initialize Leaflet Map over India
 const map = L.map('map', { center: [22.0, 80.0], zoom: 5 });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+// Tile Layers: OSM vs Satellite
+const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
+
+const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and GIS User Community'
+});
+
+// Basemap Switcher Buttons
+const bmOsmBtn = document.getElementById("bm-osm");
+const bmSatBtn = document.getElementById("bm-sat");
+
+bmOsmBtn.addEventListener("click", () => {
+  if (map.hasLayer(satLayer)) map.removeLayer(satLayer);
+  if (!map.hasLayer(osmLayer)) map.addLayer(osmLayer);
+  bmOsmBtn.classList.add("active");
+  bmSatBtn.classList.remove("active");
+});
+
+bmSatBtn.addEventListener("click", () => {
+  if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
+  if (!map.hasLayer(satLayer)) map.addLayer(satLayer);
+  bmSatBtn.classList.add("active");
+  bmOsmBtn.classList.remove("active");
+});
 
 // Exact India geographical extent: 7.0°N - 37.0°N, 68.0°E - 97.0°E
 const indiaBounds = [[7.0, 68.0], [37.0, 97.0]];
@@ -460,14 +554,34 @@ async function queryLocationForecast() {
       document.getElementById("fc-conf-num").textContent = `${p.confidence}%`;
       document.getElementById("fc-conf-fill").style.width = `${p.confidence}%`;
       
-      // Convert Kelvin to Celsius for human-readable display
+      // Convert Kelvin to Celsius
       const celsius = (p.tir1_bt - 273.15).toFixed(1);
       document.getElementById("user-temp").textContent = `${celsius} °C (${p.tir1_bt} K)`;
       document.getElementById("user-prob").textContent = `${p.rain_probability}% (${p.rain})`;
       
-      const cond = (p.four_class !== "No Rain") ? p.four_class : ((p.stratiform_convective !== "No Rain") ? p.stratiform_convective : "Clear / No Rain");
-      document.getElementById("user-condition").textContent = cond;
+      // All Precipitation Types Probabilities
+      const probs = p.all_probabilities || {};
+      const stratP = probs.stratiform || 0.0;
+      const deepP = probs.deep_convective || 0.0;
+      const isoP = probs.shallow_isolated || 0.0;
+      const nonisoP = probs.shallow_non_isolated || 0.0;
+      const norainP = probs.no_rain || 0.0;
       
+      document.getElementById("pb-strat-num").textContent = `${stratP}%`;
+      document.getElementById("pb-strat-fill").style.width = `${stratP}%`;
+      
+      document.getElementById("pb-deep-num").textContent = `${deepP}%`;
+      document.getElementById("pb-deep-fill").style.width = `${deepP}%`;
+      
+      document.getElementById("pb-iso-num").textContent = `${isoP}%`;
+      document.getElementById("pb-iso-fill").style.width = `${isoP}%`;
+      
+      document.getElementById("pb-noniso-num").textContent = `${nonisoP}%`;
+      document.getElementById("pb-noniso-fill").style.width = `${nonisoP}%`;
+      
+      document.getElementById("pb-norain-num").textContent = `${norainP}%`;
+      document.getElementById("pb-norain-fill").style.width = `${norainP}%`;
+
       // Technical Breakdown (Collapsible)
       document.getElementById("fc-desc").innerHTML = `
         <strong>TIR1 Temp</strong>: ${p.tir1_bt} K (${celsius} °C)<br>

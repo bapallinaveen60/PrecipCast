@@ -265,7 +265,6 @@ class PrecipModelPipeline:
         print(f"All 3 Deep Learning models initialized successfully in {time.time()-t0:.2f}s!")
 
     def predict_patch(self, patch_4ch_np):
-        # Apply standard Brightness Temperature normalization: clip [180, 330] -> normalize [0, 1]
         p_norm = np.clip(patch_4ch_np, 180.0, 330.0)
         p_norm = (p_norm - 180.0) / 150.0
         
@@ -284,30 +283,30 @@ class PrecipModelPipeline:
             rain_prob_np = out_rain[:, 1, :, :].cpu().numpy()
             rain_mask_np = (rain_prob_np > 0.50).astype(np.uint8)
             
+            strat_probs_np = out_strat.cpu().numpy()
+            class4_probs_np = out_4class.cpu().numpy()
+            
             strat_mask_np = torch.argmax(out_strat, dim=1).cpu().numpy()
             class4_mask_np = torch.argmax(out_4class, dim=1).cpu().numpy()
             conf_np = torch.max(out_rain, dim=1).values.cpu().numpy()
             
-        # Model 2: 1 = Stratiform, 2 = Convective
         final_strat = np.where(rain_mask_np == 1, strat_mask_np + 1, 0)
-        
-        # Model 3: 1 = Stratiform, 2 = Deep Convective, 3 = Shallow Conv (isolated), 4 = Shallow Conv (non-isolated)
         final_4class = np.where(rain_mask_np == 1, class4_mask_np + 1, 0)
         
         return {
             "rain_mask": rain_mask_np,
             "rain_prob": rain_prob_np,
             "strat_mask": final_strat,
+            "strat_probs": strat_probs_np,
             "four_class_mask": final_4class,
+            "four_class_probs": class4_probs_np,
             "confidence": conf_np
         }
 
     def predict_full_grid(self, bt_dict, target_size=(256, 256)):
-        # Exact India bounding box indices from INSAT-3R geostationary projection: Y=[686:1411], X=[1138:1923]
         y_min, y_max = 686, 1411
         x_min, x_max = 1138, 1923
         
-        # Channels stacked in exact model training order: [TIR1, TIR2, WV, MIR]
         t1 = bt_dict["TIR1"][y_min:y_max, x_min:x_max]
         t2 = bt_dict["TIR2"][y_min:y_max, x_min:x_max]
         wv = bt_dict["WV"][y_min:y_max, x_min:x_max]
@@ -325,7 +324,9 @@ class PrecipModelPipeline:
         full_rain = np.zeros(target_size, dtype=np.uint8)
         full_rain_prob = np.zeros(target_size, dtype=np.float32)
         full_strat = np.zeros(target_size, dtype=np.uint8)
+        full_strat_probs = np.zeros((2,) + target_size, dtype=np.float32)
         full_4class = np.zeros(target_size, dtype=np.uint8)
+        full_4class_probs = np.zeros((4,) + target_size, dtype=np.float32)
         full_conf = np.zeros(target_size, dtype=np.float32)
         
         patch_size = 128
@@ -363,14 +364,18 @@ class PrecipModelPipeline:
                 full_rain[y:y+sh, x:x+sw] = results["rain_mask"][idx, :sh, :sw]
                 full_rain_prob[y:y+sh, x:x+sw] = results["rain_prob"][idx, :sh, :sw]
                 full_strat[y:y+sh, x:x+sw] = results["strat_mask"][idx, :sh, :sw]
+                full_strat_probs[:, y:y+sh, x:x+sw] = results["strat_probs"][idx, :, :sh, :sw]
                 full_4class[y:y+sh, x:x+sw] = results["four_class_mask"][idx, :sh, :sw]
+                full_4class_probs[:, y:y+sh, x:x+sw] = results["four_class_probs"][idx, :, :sh, :sw]
                 full_conf[y:y+sh, x:x+sw] = results["confidence"][idx, :sh, :sw]
 
         return {
             "rain_mask": full_rain,
             "rain_prob": full_rain_prob,
             "strat_mask": full_strat,
+            "strat_probs": full_strat_probs,
             "four_class_mask": full_4class,
+            "four_class_probs": full_4class_probs,
             "confidence": full_conf,
             "tir1_bt": r_t1
         }
@@ -403,7 +408,6 @@ class MapOverlayGenerator:
         rgba = np.zeros((h, w, 4), dtype=np.uint8)
         
         if layer_type == "tir1" and bt_grid is not None:
-            # Render TIR1 Thermal IR (180K to 320K) using RdYlBu_r colormap
             norm_bt = np.clip((bt_grid - 180.0) / (320.0 - 180.0), 0.0, 1.0)
             cmap = cm.get_cmap('RdYlBu_r')
             colored = (cmap(norm_bt) * 255).astype(np.uint8)

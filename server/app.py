@@ -189,10 +189,22 @@ def query_point():
     
     rain_val = int(preds["rain_mask"][grid_y, grid_x])
     rain_prob = round(float(preds["rain_prob"][grid_y, grid_x]) * 100, 1)
+    no_rain_prob = round(100.0 - rain_prob, 1)
+    
     strat_val = int(preds["strat_mask"][grid_y, grid_x])
     class4_val = int(preds["four_class_mask"][grid_y, grid_x])
     conf_val = round(float(preds["confidence"][grid_y, grid_x]) * 100, 1)
     tir1_val = round(float(preds["tir1_bt"][grid_y, grid_x]), 1)
+    
+    # Model 2 probabilities
+    strat_prob = round(float(preds["strat_probs"][0, grid_y, grid_x]) * 100, 1)
+    conv_prob = round(float(preds["strat_probs"][1, grid_y, grid_x]) * 100, 1)
+    
+    # Model 3 sub-class probabilities
+    c4_strat_prob = round(float(preds["four_class_probs"][0, grid_y, grid_x]) * 100, 1)
+    c4_deep_conv_prob = round(float(preds["four_class_probs"][1, grid_y, grid_x]) * 100, 1)
+    c4_shallow_iso_prob = round(float(preds["four_class_probs"][2, grid_y, grid_x]) * 100, 1)
+    c4_shallow_noniso_prob = round(float(preds["four_class_probs"][3, grid_y, grid_x]) * 100, 1)
     
     rain_label = "Rain" if rain_val == 1 else "No Rain"
     
@@ -216,12 +228,23 @@ def query_point():
             "rain": rain_label,
             "rain_val": rain_val,
             "rain_probability": rain_prob,
+            "no_rain_probability": no_rain_prob,
             "stratiform_convective": strat_label,
             "strat_val": strat_val,
             "four_class": class4_label,
             "four_class_val": class4_val,
             "confidence": conf_val,
-            "tir1_bt": tir1_val
+            "tir1_bt": tir1_val,
+            "all_probabilities": {
+                "rain": rain_prob,
+                "no_rain": no_rain_prob,
+                "stratiform": strat_prob if rain_val == 1 else 0.0,
+                "convective": conv_prob if rain_val == 1 else 0.0,
+                "stratiform_sub": c4_strat_prob if rain_val == 1 else 0.0,
+                "deep_convective": c4_deep_conv_prob if rain_val == 1 else 0.0,
+                "shallow_isolated": c4_shallow_iso_prob if rain_val == 1 else 0.0,
+                "shallow_non_isolated": c4_shallow_noniso_prob if rain_val == 1 else 0.0
+            }
         }
     })
 
