@@ -1,9 +1,24 @@
 import os
 import sys
 from fastapi import FastAPI
-from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 import gradio as gr
+
+try:
+    import spaces
+    has_spaces = True
+except ImportError:
+    has_spaces = False
+
+# Safe ZeroGPU decorator fallback
+if has_spaces:
+    @spaces.GPU
+    def init_gpu():
+        pass
+    try:
+        init_gpu()
+    except Exception:
+        pass
 
 # Insert server directory into Python path
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +27,12 @@ if SERVER_DIR not in sys.path:
     sys.path.insert(0, SERVER_DIR)
 
 from app import app as flask_app
+
+# Use a2wsgi or Starlette WSGIMiddleware for mounting Flask in FastAPI
+try:
+    from a2wsgi import WSGIMiddleware
+except ImportError:
+    from starlette.middleware.wsgi import WSGIMiddleware
 
 # Create FastAPI wrapper for Flask WSGI
 fastapi_app = FastAPI(title="PrecipCast API Engine")
