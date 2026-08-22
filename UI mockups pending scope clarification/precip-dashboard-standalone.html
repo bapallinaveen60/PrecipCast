@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRECIP-AI — Precipitation Forecast Classification</title>
+<link rel="stylesheet" href="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<style>
+  html, body { height: 100%; margin: 0; }
+  .brand-icon { color: var(--color-accent); flex: none; }
+  .nav-badges { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+  .badge { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 7px 12px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); color: var(--color-text); white-space: nowrap; flex: none; }
+  .badge svg { color: var(--color-accent); }
+  .app-grid { display: grid; grid-template-columns: 300px 1fr 340px; grid-template-rows: 1fr auto; grid-template-areas: "sidebar map forecast" "timeline timeline timeline"; height: calc(100vh - 65px); }
+  .sidebar { grid-area: sidebar; overflow-y: auto; padding: var(--space-4); border-right: 1px solid var(--color-divider); display: flex; flex-direction: column; gap: var(--space-4); }
+  .map-wrap { grid-area: map; position: relative; background: var(--color-neutral-200); }
+  #map { position: absolute; inset: 0; background: var(--color-neutral-200); }
+  .map-title { position: absolute; top: var(--space-3); left: 60px; right: 46px; z-index: 500; display: flex; align-items: center; gap: 6px; background: color-mix(in srgb, var(--color-bg) 92%, transparent); border: 1px solid var(--color-divider); border-radius: var(--radius-md); padding: 8px 12px; font-family: var(--font-heading); font-weight: 600; font-size: 15px; box-shadow: var(--shadow-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: max-content; max-width: calc(100% - 106px); }
+  .map-title svg { color: var(--color-accent); }
+  .map-north { position: absolute; top: var(--space-3); right: var(--space-3); z-index: 500; background: color-mix(in srgb, var(--color-bg) 92%, transparent); border: 1px solid var(--color-divider); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; box-shadow: var(--shadow-sm); }
+  .legend { position: absolute; bottom: 34px; left: var(--space-3); z-index: 500; width: 190px; background: color-mix(in srgb, var(--color-bg) 94%, transparent); }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .forecast-panel { grid-area: forecast; overflow-y: auto; padding: var(--space-4); border-left: 1px solid var(--color-divider); display: flex; flex-direction: column; gap: var(--space-4); }
+  .forecast-type { font-family: var(--font-heading); font-weight: 400; font-size: 32px; line-height: 1.05; margin: 4px 0 0; }
+  .conf-track { height: 8px; border-radius: 4px; background: var(--color-neutral-200); overflow: hidden; margin-top: 6px; }
+  .conf-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
+  .loc-line { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text); }
+  .loc-line svg { color: var(--color-accent); flex: none; }
+  .recent-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 0; }
+  .recent-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .recent-time { color: color-mix(in srgb, var(--color-text) 55%, transparent); font-size: 12px; width: 46px; flex: none; }
+  .timeline-bar { grid-area: timeline; border-top: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4); display: flex; align-items: center; gap: var(--space-3); }
+  .tl-controls { display: flex; align-items: center; gap: 4px; flex: none; }
+  .tl-track-wrap { flex: 1; position: relative; padding-top: 18px; }
+  .tl-ticks { display: flex; justify-content: space-between; font-size: 11px; color: color-mix(in srgb, var(--color-text) 55%, transparent); padding: 0 2px 2px; font-variant-numeric: tabular-nums; }
+  input[type="range"].tl-slider { width: 100%; accent-color: var(--color-accent); cursor: pointer; }
+  .tl-now { position: absolute; top: -2px; font-size: 12px; font-weight: 600; color: var(--color-accent); transform: translateX(-50%); white-space: nowrap; }
+  select.input { cursor: pointer; }
+  .learn-link { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-heading); font-weight: 600; font-size: 13px; color: var(--color-accent); text-decoration: none; }
+  .leaflet-tile-pane { filter: sepia(0.3) saturate(0.55) brightness(1.06) contrast(1.02); }
+  .leaflet-control-zoom a { color: var(--color-text) !important; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <svg class="brand-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/></svg>
+  <div style="margin-right:auto">
+    <div class="nav-brand" style="margin:0">PRECIP-AI</div>
+    <div style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Precipitation Forecast Classification</div>
+  </div>
+  <div class="nav-badges">
+    <span class="badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="header-date">19 Apr 2026</span></span>
+    <span class="badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span id="header-time">06:15 IST</span></span>
+    <a href="About.dc.html" class="btn btn-secondary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>About</a>
+  </div>
+</header>
+
+<main class="app-grid">
+  <aside class="sidebar">
+    <div>
+      <h6 style="margin-bottom:var(--space-2)">Forecast Location</h6>
+      <div class="field" style="margin-bottom:var(--space-2)">
+        <label for="f-country">Country</label>
+        <select id="f-country" class="input"><option>India</option></select>
+      </div>
+      <div class="field" style="margin-bottom:var(--space-2)">
+        <label for="f-state">State</label>
+        <select id="f-state" class="input"></select>
+      </div>
+      <div class="field">
+        <label for="f-city">City / Location</label>
+        <select id="f-city" class="input"></select>
+      </div>
+    </div>
+    <hr class="hr" style="margin:0">
+    <div>
+      <div class="field" style="margin-bottom:var(--space-2)">
+        <label for="f-date">Forecast Date</label>
+        <input id="f-date" class="input" type="date" value="2026-04-19">
+      </div>
+      <div class="field">
+        <label for="f-slot">Forecast Time</label>
+        <select id="f-slot" class="input">
+          <option value="2">06:15 IST</option>
+          <option value="3">09:15 IST</option>
+          <option value="4">12:15 IST</option>
+          <option value="5">15:15 IST</option>
+          <option value="6">18:15 IST</option>
+          <option value="7">21:15 IST</option>
+        </select>
+      </div>
+    </div>
+    <button id="btn-view" class="btn btn-primary btn-block">View Forecast</button>
+    <hr class="hr" style="margin:0">
+    <div>
+      <h6 style="margin-bottom:var(--space-2)">Map Layer</h6>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label class="radio"><input type="radio" name="layer" value="precip" checked><span class="dot"></span>Precipitation Type</label>
+        <label class="radio"><input type="radio" name="layer" value="satellite"><span class="dot"></span>Satellite View</label>
+        <label class="radio"><input type="radio" name="layer" value="cloud"><span class="dot"></span>Cloud Temperature</label>
+      </div>
+    </div>
+  </aside>
+
+  <section class="map-wrap">
+    <div id="map"></div>
+    <div class="map-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/></svg>Precipitation Classification</div>
+    <div class="map-north">N↑</div>
+    <div class="legend card elev-sm">
+      <div class="card-kicker" style="margin-bottom:2px">Precipitation Type</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#EF5350"></span>Convective Rain</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#3F8FE8"></span>Stratiform Rain</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#FFB52E"></span>Shallow Rain</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#8D9AA3"></span>No Precipitation</div>
+    </div>
+  </section>
+
+  <aside class="forecast-panel">
+    <div>
+      <div class="card-kicker">Current Forecast</div>
+      <h3 id="fc-type" class="forecast-type">Convective Rain</h3>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:var(--space-3)">
+        <span style="font-size:12px;color:color-mix(in srgb, var(--color-text) 60%, transparent)">Prediction confidence</span>
+        <span id="fc-conf-num" style="font-family:var(--font-heading);font-weight:600;font-size:16px">92%</span>
+      </div>
+      <div class="conf-track"><div id="fc-conf-fill" class="conf-fill" style="width:92%;background:#EF5350"></div></div>
+    </div>
+    <div>
+      <div class="loc-line"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="fc-loc">Bengaluru, Karnataka</span></div>
+      <div style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-left:21px" id="fc-coords">12.97° N, 77.59° E</div>
+    </div>
+    <hr class="hr" style="margin:0">
+    <div>
+      <div class="card-body" id="fc-desc" style="margin-bottom:var(--space-2)">Strong convective activity is expected with a possibility of intense rainfall.</div>
+      <h6 style="margin-bottom:6px">What does this mean?</h6>
+      <p id="fc-generic" style="font-size:13px;opacity:.85;margin:0 0 var(--space-2)">Rainfall associated with strong upward atmospheric motion. It can produce intense rainfall and thunderstorms.</p>
+      <a href="About.dc.html#classes" class="learn-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <hr class="hr" style="margin:0">
+    <div>
+      <h6 style="margin-bottom:6px">Recent Forecasts</h6>
+      <div id="fc-recent"></div>
+    </div>
+  </aside>
+
+  <div class="timeline-bar">
+    <div class="tl-controls">
+      <button id="btn-prev" class="btn btn-secondary btn-icon" aria-label="Previous"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+      <button id="btn-play" class="btn btn-primary btn-icon" aria-label="Play"><svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+      <button id="btn-next" class="btn btn-secondary btn-icon" aria-label="Next"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+    </div>
+    <div class="tl-track-wrap">
+      <div id="tl-now" class="tl-now">06:15</div>
+      <input id="tl-slider" class="tl-slider" type="range" min="0" max="7" step="1" value="2">
+      <div class="tl-ticks"><span>00:00</span><span>03:00</span><span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span></div>
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script>
+const CLASS_ORDER = ['Convective Rain','Stratiform Rain','Shallow Rain','No Precipitation'];
+const CLASS_INFO = {
+  'Convective Rain': { color:'#EF5350', generic:'Rainfall associated with strong upward atmospheric motion. It can produce intense rainfall and thunderstorms.' },
+  'Stratiform Rain': { color:'#3F8FE8', generic:'Widespread, generally steady rainfall covering a larger area.' },
+  'Shallow Rain': { color:'#FFB52E', generic:'Light precipitation produced by relatively shallow clouds.' },
+  'No Precipitation': { color:'#8D9AA3', generic:'No significant precipitation is expected at this location.' }
+};
+const TIME_SLOTS = ['00:15','03:15','06:15','09:15','12:15','15:15','18:15','21:15'];
+const BASE_TIME_DATA = [
+  { type:'No Precipitation', confidence:90, description:'Clear skies with no precipitation expected overnight.' },
+  { type:'No Precipitation', confidence:88, description:'Conditions remain dry through the early morning hours.' },
+  { type:'Convective Rain', confidence:92, description:'Strong convective activity is expected with a possibility of intense rainfall.' },
+  { type:'Stratiform Rain', confidence:87, description:'Widespread and relatively steady rainfall is expected.' },
+  { type:'No Precipitation', confidence:94, description:'No significant precipitation is expected.' },
+  { type:'Shallow Rain', confidence:81, description:'Light precipitation from relatively shallow clouds is expected.' },
+  { type:'Stratiform Rain', confidence:85, description:'Steady rainfall continues into the evening across the region.' },
+  { type:'Convective Rain', confidence:78, description:'Isolated thunderstorms are possible overnight.' }
+];
+const CITIES = {
+  Karnataka: [ {name:'Bengaluru', lat:12.97, lng:77.59}, {name:'Mysuru', lat:12.30, lng:76.65}, {name:'Mangaluru', lat:12.91, lng:74.86} ],
+  Maharashtra: [ {name:'Mumbai', lat:19.08, lng:72.88}, {name:'Pune', lat:18.52, lng:73.86}, {name:'Nagpur', lat:21.15, lng:79.09} ],
+  'Tamil Nadu': [ {name:'Chennai', lat:13.08, lng:80.27}, {name:'Coimbatore', lat:11.02, lng:76.96} ],
+  'West Bengal': [ {name:'Kolkata', lat:22.57, lng:88.36} ],
+  Delhi: [ {name:'New Delhi', lat:28.61, lng:77.21} ],
+  Rajasthan: [ {name:'Jaipur', lat:26.91, lng:75.79} ]
+};
+const LOCATIONS = [];
+Object.keys(CITIES).forEach(state => CITIES[state].forEach(c => LOCATIONS.push({ seed: LOCATIONS.length, state, name: c.name, lat: c.lat, lng: c.lng })));
+
+let currentSlot = 2, currentSeed = 0, selectedCoords = null, playTimer = null;
+
+function getForecast(seed, slot) {
+  const base = BASE_TIME_DATA[slot];
+  const baseIdx = CLASS_ORDER.indexOf(base.type);
+  const type = CLASS_ORDER[(baseIdx + seed) % 4];
+  const confidence = seed === 0 ? base.confidence : Math.max(70, Math.min(97, base.confidence + ((seed * 13) % 9) - 4));
+  const description = seed === 0 ? base.description : CLASS_INFO[type].generic;
+  return { type, confidence, description };
+}
+function fmtCoord(lat, lng) {
+  return Math.abs(lat).toFixed(2) + '° ' + (lat >= 0 ? 'N' : 'S') + ', ' + Math.abs(lng).toFixed(2) + '° ' + (lng >= 0 ? 'E' : 'W');
+}
+
+// -- map setup --
+const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([22.9, 79.5], 5);
+const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 12 }).addTo(map);
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery &copy; Esri', maxZoom: 12 });
+L.control.scale({ position: 'bottomright', imperial: false }).addTo(map);
+const recenterBtn = L.control({ position: 'topleft' });
+recenterBtn.onAdd = function () {
+  const div = L.DomUtil.create('div', 'leaflet-bar');
+  div.innerHTML = '<a href="#" title="Recenter" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px">◎</a>';
+  div.onclick = (e) => { e.preventDefault(); map.setView([22.9, 79.5], 5); };
+  return div;
+};
+recenterBtn.addTo(map);
+
+let boundaryLayer = null;
+fetch('https://cdn.jsdelivr.net/gh/geohacker/india@master/state/india_state.geojson')
+  .then(r => r.json())
+  .then(geo => {
+    boundaryLayer = L.geoJSON(geo, { style: { color: '#7d5411', weight: 1, opacity: 0.65, fillOpacity: 0 } }).addTo(map);
+  }).catch(() => {});
+
+const precipLayer = L.layerGroup().addTo(map);
+const cloudLayer = L.layerGroup();
+const markers = [];
+LOCATIONS.forEach(loc => {
+  const group = L.layerGroup().addTo(precipLayer);
+  const halo = L.circle([loc.lat, loc.lng], { radius: 70000, weight: 0, fillOpacity: 0.18 }).addTo(group);
+  const core = L.circleMarker([loc.lat, loc.lng], { radius: 9, weight: 1.5, fillOpacity: 0.85 }).addTo(group);
+  core.on('click', () => selectLocation(loc.seed, [loc.lat, loc.lng], loc.name + ', ' + loc.state));
+  core.bindTooltip(loc.name, { direction: 'top' });
+  const cCircle = L.circle([loc.lat, loc.lng], { radius: 110000, weight: 0, fillOpacity: 0.28 }).addTo(cloudLayer);
+  markers.push({ loc, halo, core, cCircle });
+});
+map.on('click', (e) => {
+  let nearest = LOCATIONS[0], best = Infinity;
+  LOCATIONS.forEach(l => { const d = Math.hypot(l.lat - e.latlng.lat, l.lng - e.latlng.lng); if (d < best) { best = d; nearest = l; } });
+  const label = best < 1.2 ? nearest.name + ', ' + nearest.state : 'Selected Location';
+  selectLocation(nearest.seed, [e.latlng.lat, e.latlng.lng], label);
+});
+
+function selectLocation(seed, coords, label) {
+  currentSeed = seed; selectedCoords = coords;
+  document.getElementById('fc-loc').textContent = label;
+  syncSelectsToSeed(seed);
+  render();
+}
+function syncSelectsToSeed(seed) {
+  const loc = LOCATIONS[seed];
+  document.getElementById('f-state').value = loc.state;
+  populateCities(loc.state, loc.name);
+}
+function populateCities(state, selectedName) {
+  const citySel = document.getElementById('f-city');
+  citySel.innerHTML = '';
+  CITIES[state].forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = c.name; citySel.appendChild(o); });
+  citySel.value = selectedName || CITIES[state][0].name;
+}
+function locationBySeed(seed) { return LOCATIONS[seed]; }
+
+function render() {
+  const loc = locationBySeed(currentSeed);
+  const coords = selectedCoords || [loc.lat, loc.lng];
+  const fc = getForecast(currentSeed, currentSlot);
+  const info = CLASS_INFO[fc.type];
+
+  document.getElementById('fc-type').textContent = fc.type;
+  document.getElementById('fc-type').style.color = info.color;
+  document.getElementById('fc-conf-num').textContent = fc.confidence + '%';
+  document.getElementById('fc-conf-fill').style.width = fc.confidence + '%';
+  document.getElementById('fc-conf-fill').style.background = info.color;
+  document.getElementById('fc-coords').textContent = fmtCoord(coords[0], coords[1]);
+  document.getElementById('fc-desc').textContent = fc.description;
+  document.getElementById('fc-generic').textContent = info.generic;
+
+  document.getElementById('header-time').textContent = TIME_SLOTS[currentSlot] + ' IST';
+  document.getElementById('tl-now').textContent = TIME_SLOTS[currentSlot];
+  const slider = document.getElementById('tl-slider');
+  slider.value = currentSlot;
+  document.getElementById('tl-now').style.left = (currentSlot / 7 * 100) + '%';
+
+  markers.forEach(m => {
+    const f = getForecast(m.loc.seed, currentSlot);
+    const c = CLASS_INFO[f.type].color;
+    m.core.setStyle({ color: c, fillColor: c });
+    m.halo.setStyle({ color: c, fillColor: c });
+  });
+
+  const recentEl = document.getElementById('fc-recent');
+  recentEl.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const idx = (currentSlot - i + 8) % 8;
+    const rf = getForecast(currentSeed, idx);
+    const row = document.createElement('div');
+    row.className = 'recent-row';
+    row.innerHTML = '<span class="recent-time">' + TIME_SLOTS[idx] + '</span><span class="recent-dot" style="background:' + CLASS_INFO[rf.type].color + '"></span><span>' + rf.type + '</span>';
+    recentEl.appendChild(row);
+  }
+}
+
+document.getElementById('f-state').addEventListener('change', (e) => populateCities(e.target.value));
+Object.keys(CITIES).forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; document.getElementById('f-state').appendChild(o); });
+document.getElementById('f-state').value = 'Karnataka';
+populateCities('Karnataka', 'Bengaluru');
+
+document.getElementById('f-slot').addEventListener('change', (e) => { currentSlot = parseInt(e.target.value, 10); render(); });
+document.getElementById('btn-view').addEventListener('click', () => {
+  const state = document.getElementById('f-state').value;
+  const cityName = document.getElementById('f-city').value;
+  const loc = LOCATIONS.find(l => l.state === state && l.name === cityName);
+  if (loc) { map.setView([loc.lat, loc.lng], 7); selectLocation(loc.seed, [loc.lat, loc.lng], loc.name + ', ' + loc.state); }
+});
+
+const slider = document.getElementById('tl-slider');
+slider.addEventListener('input', (e) => { currentSlot = parseInt(e.target.value, 10); render(); });
+document.getElementById('btn-prev').addEventListener('click', () => { currentSlot = Math.max(0, currentSlot - 1); render(); });
+document.getElementById('btn-next').addEventListener('click', () => { currentSlot = Math.min(7, currentSlot + 1); render(); });
+document.getElementById('btn-play').addEventListener('click', (e) => {
+  const iconWrap = document.getElementById('icon-play');
+  if (playTimer) {
+    clearInterval(playTimer); playTimer = null;
+    iconWrap.outerHTML = '<svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+  } else {
+    playTimer = setInterval(() => { currentSlot = (currentSlot + 1) % 8; render(); }, 1400);
+    document.getElementById('icon-play').outerHTML = '<svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  }
+});
+
+document.querySelectorAll('input[name="layer"]').forEach(r => r.addEventListener('change', (e) => {
+  map.removeLayer(osm); map.removeLayer(satellite);
+  map.removeLayer(precipLayer); map.removeLayer(cloudLayer);
+  if (boundaryLayer) map.removeLayer(boundaryLayer);
+  if (e.target.value === 'precip') {
+    osm.addTo(map); precipLayer.addTo(map); if (boundaryLayer) boundaryLayer.addTo(map);
+  } else if (e.target.value === 'satellite') {
+    satellite.addTo(map); if (boundaryLayer) boundaryLayer.addTo(map);
+  } else {
+    osm.addTo(map); cloudLayer.addTo(map);
+  }
+}));
+
+render();
+</script>
+</body>
+</html>

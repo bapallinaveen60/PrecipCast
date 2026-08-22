@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/styles.css">
+  <script src="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/_ds_bundle.js"></script>
+</helmet>
+<div style="min-height:100vh;background:var(--color-bg);color:var(--color-text)">
+  <header class="nav">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/></svg>
+    <div style="margin-right:auto">
+      <div class="nav-brand" style="margin:0">PRECIP-AI</div>
+      <div style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Precipitation Forecast Classification</div>
+    </div>
+    <a href="precip-dashboard.html">Map</a>
+    <a href="About.dc.html">About</a>
+  </header>
+
+  <div style="max-width:780px;margin:0 auto;padding:var(--space-8) var(--space-4)">
+    <div class="tag tag-outline" style="margin-bottom:var(--space-2)">For researchers</div>
+    <h1>Scientific Information</h1>
+    <p style="font-size:16px;line-height:1.7">This page documents the data sources, model design and validation behind the forecasts shown on the main map. It is not needed to read a forecast — it exists for those who want to understand how one is produced.</p>
+
+    <hr class="hr">
+
+    <h3>Input data &amp; channels</h3>
+    <table class="table">
+      <thead><tr><th>Source</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>INSAT-3DR (VIS, TIR1, TIR2, WV)</td><td>Cloud imagery and cloud-top brightness temperature</td></tr>
+        <tr><td>CAPE</td><td>Convective Available Potential Energy — atmospheric instability, a driver of convective rain</td></tr>
+        <tr><td>TCWV</td><td>Total Column Water Vapour — moisture available for precipitation</td></tr>
+        <tr><td>SRTM DEM</td><td>Terrain elevation — orographic influence on rainfall</td></tr>
+        <tr><td>GPM-DPR</td><td>Satellite rainfall radar — reference labels for training and validation</td></tr>
+      </tbody>
+    </table>
+
+    <hr class="hr">
+
+    <h3>Model</h3>
+    <p>Classification is performed by a convolutional neural network with an attention mechanism over the INSAT channels, with CAPE and TCWV incorporated as physics-aware auxiliary features and DEM as a static terrain input. The model outputs one of four precipitation classes per grid cell along with a confidence score.</p>
+
+    <hr class="hr">
+
+    <h3>Validation</h3>
+    <p class="text-muted" style="font-size:13px">Illustrative values for this prototype.</p>
+    <table class="table">
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Overall accuracy</td><td>88.4%</td></tr>
+        <tr><td>F1 score</td><td>0.83</td></tr>
+        <tr><td>CSI (Critical Success Index)</td><td>0.71</td></tr>
+        <tr><td>POD (Probability of Detection)</td><td>0.86</td></tr>
+        <tr><td>FAR (False Alarm Ratio)</td><td>0.15</td></tr>
+        <tr><td>HSS (Heidke Skill Score)</td><td>0.79</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

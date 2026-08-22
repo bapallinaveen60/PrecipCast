@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRECIPCAST — Precipitation Type Classification Platform</title>
+<link rel="stylesheet" href="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<style>
+  html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .brand-icon { color: #0288d1; flex: none; }
+  .nav-badges { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+  .badge { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 6px; color: #333; white-space: nowrap; background: #fff; }
+  .badge svg { color: #0288d1; }
+  .app-grid { display: grid; grid-template-columns: 310px 1fr 340px; grid-template-rows: 1fr auto; grid-template-areas: "sidebar map forecast" "timeline timeline timeline"; height: calc(100vh - 65px); }
+  .sidebar { grid-area: sidebar; overflow-y: auto; padding: 16px; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fafafa; }
+  .map-wrap { grid-area: map; position: relative; background: #111827; }
+  #map { position: absolute; inset: 0; background: #111827; }
+  .map-title { position: absolute; top: 14px; left: 60px; z-index: 500; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .map-north { position: absolute; top: 14px; right: 14px; z-index: 500; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .legend { position: absolute; bottom: 20px; left: 14px; z-index: 500; width: 230px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 6px; color: #222; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,0.1); }
+  .forecast-panel { grid-area: forecast; overflow-y: auto; padding: 16px; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fff; }
+  .forecast-type { font-weight: 700; font-size: 24px; line-height: 1.15; margin: 6px 0 0; color: #1a237e; }
+  .conf-track { height: 8px; border-radius: 4px; background: #e0e0e0; overflow: hidden; margin-top: 6px; }
+  .conf-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
+  .loc-line { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #333; }
+  .loc-line svg { color: #0288d1; flex: none; }
+  .timeline-bar { grid-area: timeline; border-top: 1px solid #e0e0e0; padding: 12px 20px; display: flex; align-items: center; gap: 16px; background: #fff; }
+  .tl-controls { display: flex; align-items: center; gap: 8px; flex: none; }
+  .tl-track-wrap { flex: 1; position: relative; padding-top: 18px; }
+  .tl-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #666; padding: 4px 2px 0; }
+  input[type="range"].tl-slider { width: 100%; accent-color: #0288d1; cursor: pointer; }
+  .tl-now { position: absolute; top: -4px; font-size: 12px; font-weight: 700; color: #0288d1; transform: translateX(-50%); white-space: nowrap; background: #e1f5fe; padding: 2px 6px; border-radius: 4px; }
+  select.input, input.input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; margin-top: 4px; background: #fff; }
+  .radio { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; margin-bottom: 8px; color: #333; font-weight: 500; }
+  .btn-primary { background: #0288d1; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #0277bd; }
+  .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ccc; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+  .stat-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<header class="nav" style="display:flex;align-items:center;padding:10px 20px;background:#fff;border-bottom:1px solid #e0e0e0">
+  <svg class="brand-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/></svg>
+  <div style="margin-left:10px">
+    <div style="font-weight:700;font-size:16px;color:#1a237e">PRECIPCAST</div>
+    <div style="font-size:11px;color:#666">INSAT-3R Satellite Deep Learning Precipitation Platform</div>
+  </div>
+  <div class="nav-badges">
+    <span class="badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="header-date">19 Apr 2026</span></span>
+    <span class="badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span id="header-time">06:15 IST</span></span>
+  </div>
+</header>
+
+<main class="app-grid">
+  <!-- Left Sidebar -->
+  <aside class="sidebar">
+    <div>
+      <h4 style="font-size:14px;margin-bottom:8px;color:#333">Location Query</h4>
+      <div style="margin-bottom:8px">
+        <label style="font-size:12px;color:#666">State</label>
+        <select id="f-state" class="input"></select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:#666">City</label>
+        <select id="f-city" class="input"></select>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e0e0e0;margin:4px 0">
+
+    <div>
+      <h4 style="font-size:14px;margin-bottom:8px;color:#333">Leaflet Overlay Layer</h4>
+      <label class="radio"><input type="radio" name="layer" value="rain" checked> Rain vs No-Rain (Model 1)</label>
+      <label class="radio"><input type="radio" name="layer" value="stratiform_convective"> Stratiform vs Convective (Model 2)</label>
+      <label class="radio"><input type="radio" name="layer" value="four_class"> All Sub-Classes incl. Shallow Rain (Model 3)</label>
+      <label class="radio"><input type="radio" name="layer" value="tir1"> 🛰️ TIR1 Thermal IR Imagery</label>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e0e0e0;margin:4px 0">
+
+    <div>
+      <h4 style="font-size:14px;margin-bottom:8px;color:#333">India Rain Coverage</h4>
+      <div class="stat-card"><span>Rain Coverage</span><strong id="st-coverage">--%</strong></div>
+      <div class="stat-card"><span>Stratiform Rain</span><strong id="st-strat">-- px</strong></div>
+      <div class="stat-card"><span>Deep Convective</span><strong id="st-deep-conv">-- px</strong></div>
+      <div class="stat-card"><span>Shallow Conv (isolated)</span><strong id="st-shallow-iso">-- px</strong></div>
+      <div class="stat-card"><span>Shallow Conv (non-iso)</span><strong id="st-shallow-noniso">-- px</strong></div>
+      <div class="stat-card"><span>Avg ML Confidence</span><strong id="st-conf">--%</strong></div>
+    </div>
+  </aside>
+
+  <!-- Central Map View -->
+  <section class="map-wrap">
+    <div id="map"></div>
+    <div class="map-title" id="map-title-text"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/></svg>Rain vs No-Rain Classification</div>
+    <div class="map-north">N↑</div>
+    <div id="legend-box" class="legend"></div>
+  </section>
+
+  <!-- Right Forecast Panel -->
+  <aside class="forecast-panel">
+    <div>
+      <div style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.5px">Selected Location Forecast</div>
+      <h3 id="fc-type" class="forecast-type">Calculating...</h3>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px">
+        <span style="font-size:12px;color:#666">ML Prediction Confidence</span>
+        <span id="fc-conf-num" style="font-weight:700;font-size:16px;color:#1a237e">--%</span>
+      </div>
+      <div class="conf-track"><div id="fc-conf-fill" class="conf-fill" style="width:0%;background:#0288d1"></div></div>
+    </div>
+
+    <div>
+      <div class="loc-line"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="fc-loc">Bengaluru, Karnataka</span></div>
+      <div style="font-size:12px;color:#666;margin-left:22px" id="fc-coords">12.97° N, 77.59° E</div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e0e0e0;margin:0">
+
+    <div>
+      <h5 style="margin-bottom:6px;font-size:13px;color:#333">Classification Details</h5>
+      <div style="font-size:13px;line-height:1.5;color:#444" id="fc-desc">Select a location or click anywhere on the map to query model predictions.</div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e0e0e0;margin:0">
+
+    <div>
+      <h5 style="margin-bottom:8px;font-size:13px;color:#333">Cascaded Model Workflow</h5>
+      <div style="font-size:12px;color:#555;line-height:1.5">
+        1. <strong>INSAT-3R Channels</strong>: [TIR1, TIR2, WV, MIR] BT Kelvin.<br>
+        2. <strong>Model 1</strong>: Binary Rain / No-Rain segmentation.<br>
+        3. <strong>Model 2 & 3</strong>: Rain pixels route to Stratiform/Convective and 4-class sub-classes (incl. Shallow Rain).
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom Timeline Bar -->
+  <div class="timeline-bar">
+    <div class="tl-controls">
+      <button id="btn-prev" class="btn-secondary">◀</button>
+      <button id="btn-play" class="btn-primary">Play ▶</button>
+      <button id="btn-next" class="btn-secondary">▶</button>
+    </div>
+    <div class="tl-track-wrap">
+      <div id="tl-now" class="tl-now">06:15 IST</div>
+      <input id="tl-slider" class="tl-slider" type="range" min="0" max="0" step="1" value="0">
+      <div id="tl-ticks" class="tl-ticks"></div>
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script>
+// Major Cities across India
+const CITIES = {
+  "Karnataka": [{name:"Bengaluru", lat:12.97, lon:77.59}, {name:"Mysuru", lat:12.30, lon:76.65}],
+  "Maharashtra": [{name:"Mumbai", lat:19.08, lon:72.88}, {name:"Pune", lat:18.52, lon:73.86}],
+  "Delhi": [{name:"New Delhi", lat:28.61, lon:77.21}],
+  "Tamil Nadu": [{name:"Chennai", lat:13.08, lon:80.27}, {name:"Coimbatore", lat:11.01, lon:76.95}],
+  "West Bengal": [{name:"Kolkata", lat:22.57, lon:88.36}],
+  "Telangana": [{name:"Hyderabad", lat:17.38, lon:78.48}],
+  "Gujarat": [{name:"Ahmedabad", lat:23.02, lon:72.57}],
+  "Rajasthan": [{name:"Jaipur", lat:26.91, lon:75.79}],
+  "Kerala": [{name:"Thiruvananthapuram", lat:8.52, lon:76.93}, {name:"Kochi", lat:9.93, lon:76.26}]
+};
+
+let timestamps = [];
+let currentIndex = 0;
+let currentLayer = "rain";
+let currentPoint = { lat: 12.97, lon: 77.59, name: "Bengaluru", state: "Karnataka" };
+let isPlaying = false;
+let playTimer = null;
+
+// Initialize Leaflet Map over India
+const map = L.map('map', { center: [22.0, 80.0], zoom: 5 });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Exact India geographical extent: 7.0°N - 37.0°N, 68.0°E - 97.0°E
+const indiaBounds = [[7.0, 68.0], [37.0, 97.0]];
+let imageOverlay = null;
+let marker = L.marker([currentPoint.lat, currentPoint.lon]).addTo(map);
+
+// Populate state/city dropdowns
+const stateSelect = document.getElementById("f-state");
+const citySelect = document.getElementById("f-city");
+
+Object.keys(CITIES).forEach(state => {
+  const opt = document.createElement("option");
+  opt.value = state; opt.textContent = state;
+  stateSelect.appendChild(opt);
+});
+
+function updateCities() {
+  const state = stateSelect.value;
+  citySelect.innerHTML = "";
+  (CITIES[state] || []).forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.name; opt.textContent = c.name;
+    citySelect.appendChild(opt);
+  });
+  if (CITIES[state] && CITIES[state].length > 0) {
+    selectCity(CITIES[state][0]);
+  }
+}
+
+stateSelect.addEventListener("change", updateCities);
+citySelect.addEventListener("change", () => {
+  const state = stateSelect.value;
+  const city = (CITIES[state] || []).find(c => c.name === citySelect.value);
+  if (city) selectCity(city);
+});
+
+function selectCity(city) {
+  currentPoint = { lat: city.lat, lon: city.lon, name: city.name, state: stateSelect.value };
+  marker.setLatLng([city.lat, city.lon]);
+  map.panTo([city.lat, city.lon]);
+  queryLocationForecast();
+}
+
+// Click on map to query prediction
+map.on('click', (e) => {
+  currentPoint = { lat: e.latlng.lat, lon: e.latlng.lng, name: `${e.latlng.lat.toFixed(2)}° N, ${e.latlng.lng.toFixed(2)}° E`, state: "Custom Map Point" };
+  marker.setLatLng(e.latlng);
+  queryLocationForecast();
+});
+
+// Layer radio selection
+document.querySelectorAll('input[name="layer"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    currentLayer = e.target.value;
+    updateMapTitle();
+    updateLegend();
+    loadOverlay();
+  });
+});
+
+function updateMapTitle() {
+  const titles = {
+    "rain": "Rain vs No-Rain (Model 1)",
+    "stratiform_convective": "Stratiform vs Convective Classification (Model 2)",
+    "four_class": "All Rain Sub-Classes incl. Shallow Rain (Model 3)",
+    "tir1": "🛰️ TIR1 Thermal IR Satellite Imagery"
+  };
+  document.getElementById("map-title-text").innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/></svg>${titles[currentLayer]}`;
+}
+
+function updateLegend() {
+  const legendBox = document.getElementById("legend-box");
+  if (currentLayer === "rain") {
+    legendBox.innerHTML = `
+      <div style="font-weight:700;font-size:12px;margin-bottom:6px">Rain Classification</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#2196F3"></span>Rain Detected</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#ffffff;border:1px solid #aaa"></span>No Rain</div>
+    `;
+  } else if (currentLayer === "stratiform_convective") {
+    legendBox.innerHTML = `
+      <div style="font-weight:700;font-size:12px;margin-bottom:6px">Rainfall Type</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#3A86FF"></span>Stratiform Rain</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#D32F2F"></span>Convective Rain</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#ffffff;border:1px solid #aaa"></span>No Rain</div>
+    `;
+  } else if (currentLayer === "four_class") {
+    legendBox.innerHTML = `
+      <div style="font-weight:700;font-size:12px;margin-bottom:6px">Rain Sub-Classes (Model 3)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#3A86FF"></span>Stratiform Rain</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#D32F2F"></span>Deep Convective</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#FF7043"></span>Shallow Conv (isolated)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#FFC107"></span>Shallow Conv (non-iso)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#ffffff;border:1px solid #aaa"></span>No Rain</div>
+    `;
+  } else if (currentLayer === "tir1") {
+    legendBox.innerHTML = `
+      <div style="font-weight:700;font-size:12px;margin-bottom:6px">TIR1 Brightness Temp (K)</div>
+      <div style="height:12px;border-radius:3px;background:linear-gradient(to right, #053061, #2166ac, #4393c3, #92c5de, #d1e5f0, #fddbc7, #f4a582, #d6604d, #b2182b, #67001f);margin:6px 0"></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#444">
+        <span>180K (High/Cold)</span>
+        <span>320K (Warm)</span>
+      </div>
+    `;
+  }
+}
+
+// Load backend data
+async function initPlatform() {
+  try {
+    const res = await fetch("/api/timestamps");
+    const data = await res.json();
+    if (data.status === "success" && data.timestamps.length > 0) {
+      timestamps = data.timestamps;
+      const slider = document.getElementById("tl-slider");
+      slider.max = timestamps.length - 1;
+      slider.value = 0;
+      
+      document.getElementById("tl-ticks").innerHTML = `<span>${timestamps[0].time}</span><span>${timestamps[Math.floor(timestamps.length/2)].time}</span><span>${timestamps[timestamps.length-1].time}</span>`;
+      
+      updateCities();
+      loadTimestamp(0);
+    }
+  } catch (e) {
+    console.error("Error connecting to backend API:", e);
+  }
+}
+
+function loadTimestamp(idx) {
+  currentIndex = idx;
+  const ts = timestamps[idx];
+  if (!ts) return;
+  
+  document.getElementById("header-date").textContent = ts.date;
+  document.getElementById("header-time").textContent = ts.time;
+  document.getElementById("tl-now").textContent = ts.time;
+  document.getElementById("tl-slider").value = idx;
+  
+  loadSummaryForecast();
+  loadOverlay();
+  queryLocationForecast();
+}
+
+async function loadOverlay() {
+  const ts = timestamps[currentIndex];
+  if (!ts) return;
+  
+  const overlayUrl = `/api/overlay?filename=${encodeURIComponent(ts.filename)}&layer=${currentLayer}&t=${Date.now()}`;
+  if (imageOverlay) map.removeLayer(imageOverlay);
+  
+  imageOverlay = L.imageOverlay(overlayUrl, indiaBounds, { opacity: 0.88 }).addTo(map);
+}
+
+async function loadSummaryForecast() {
+  const ts = timestamps[currentIndex];
+  if (!ts) return;
+  
+  try {
+    const res = await fetch(`/api/forecast?filename=${encodeURIComponent(ts.filename)}`);
+    const data = await res.json();
+    if (data.status === "success") {
+      const s = data.summary;
+      document.getElementById("st-coverage").textContent = `${s.rain_coverage_pct}%`;
+      document.getElementById("st-strat").textContent = `${s.stratiform_pixels} px`;
+      document.getElementById("st-deep-conv").textContent = `${s.deep_convective_pixels} px`;
+      document.getElementById("st-shallow-iso").textContent = `${s.shallow_conv_isolated_pixels} px`;
+      document.getElementById("st-shallow-noniso").textContent = `${s.shallow_conv_non_isolated_pixels} px`;
+      document.getElementById("st-conf").textContent = `${s.average_confidence}%`;
+    }
+  } catch (e) {
+    console.error("Error loading forecast summary:", e);
+  }
+}
+
+async function queryLocationForecast() {
+  const ts = timestamps[currentIndex];
+  if (!ts) return;
+  
+  document.getElementById("fc-loc").textContent = currentPoint.name;
+  document.getElementById("fc-coords").textContent = `${currentPoint.lat.toFixed(2)}° N, ${currentPoint.lon.toFixed(2)}° E`;
+  
+  try {
+    const res = await fetch(`/api/query?lat=${currentPoint.lat}&lon=${currentPoint.lon}&filename=${encodeURIComponent(ts.filename)}`);
+    const data = await res.json();
+    if (data.status === "success") {
+      const p = data.prediction;
+      
+      let displayType = p.rain;
+      if (currentLayer === "stratiform_convective") displayType = p.stratiform_convective;
+      if (currentLayer === "four_class") displayType = p.four_class;
+      if (currentLayer === "tir1") displayType = `${p.tir1_bt} K (TIR1)`;
+      
+      document.getElementById("fc-type").textContent = displayType;
+      document.getElementById("fc-conf-num").textContent = `${p.confidence}%`;
+      document.getElementById("fc-conf-fill").style.width = `${p.confidence}%`;
+      
+      document.getElementById("fc-desc").innerHTML = `
+        <strong>TIR1 Temp</strong>: ${p.tir1_bt} K<br>
+        <strong>Rain Mask (Model 1)</strong>: ${p.rain} (${p.rain_probability}% prob)<br>
+        <strong>Rain Type (Model 2)</strong>: ${p.stratiform_convective}<br>
+        <strong>Sub-Class (Model 3)</strong>: ${p.four_class}
+      `;
+    }
+  } catch (e) {
+    console.error("Error querying location forecast:", e);
+  }
+}
+
+// Timeline navigation & playback
+document.getElementById("tl-slider").addEventListener("input", (e) => loadTimestamp(parseInt(e.target.value)));
+document.getElementById("btn-prev").addEventListener("click", () => {
+  if (currentIndex > 0) loadTimestamp(currentIndex - 1);
+});
+document.getElementById("btn-next").addEventListener("click", () => {
+  if (currentIndex < timestamps.length - 1) loadTimestamp(currentIndex + 1);
+});
+
+const playBtn = document.getElementById("btn-play");
+playBtn.addEventListener("click", () => {
+  if (isPlaying) {
+    clearInterval(playTimer);
+    isPlaying = false;
+    playBtn.textContent = "Play ▶";
+  } else {
+    isPlaying = true;
+    playBtn.textContent = "Pause ❚❚";
+    playTimer = setInterval(() => {
+      currentIndex = (currentIndex + 1) % timestamps.length;
+      loadTimestamp(currentIndex);
+    }, 2000);
+  }
+});
+
+updateLegend();
+initPlatform();
+</script>
+</body>
+</html>

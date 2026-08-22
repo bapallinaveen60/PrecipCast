@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/styles.css">
+  <script src="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/_ds_bundle.js"></script>
+</helmet>
+<div style="min-height:100vh;background:var(--color-bg);color:var(--color-text)">
+  <header class="nav">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/></svg>
+    <div style="margin-right:auto">
+      <div class="nav-brand" style="margin:0">PRECIP-AI</div>
+      <div style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Precipitation Forecast Classification</div>
+    </div>
+    <a href="precip-dashboard.html">Map</a>
+    <a href="About.dc.html" aria-current="page">About</a>
+  </header>
+
+  <div style="max-width:760px;margin:0 auto;padding:var(--space-8) var(--space-4)">
+    <h1>About PRECIP-AI</h1>
+
+    <h3>What is PRECIP-AI?</h3>
+    <p style="font-size:16px;line-height:1.7">PRECIP-AI uses satellite observations and atmospheric information with artificial intelligence to classify precipitation conditions.</p>
+
+    <hr class="hr">
+
+    <h3>Data</h3>
+    <p>PRECIP-AI combines satellite observations with atmospheric and terrain information to identify precipitation types across India.</p>
+    <ul style="padding-left:20px;line-height:1.8">
+      <li><strong>INSAT-3DR</strong> — geostationary satellite imagery, the primary source for cloud observation</li>
+      <li><strong>ERA5</strong> — atmospheric reanalysis, providing background weather conditions</li>
+      <li><strong>SRTM DEM</strong> — terrain elevation, used to account for the landscape's effect on rainfall</li>
+      <li><strong>GPM-DPR</strong> — satellite rainfall radar, used for reference and validation</li>
+    </ul>
+
+    <hr class="hr">
+
+    <h3 id="classes">Understanding precipitation types</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-top:var(--space-3)">
+      <div class="card">
+        <div class="card-kicker" style="color:#EF5350">Convective Rain</div>
+        <p class="card-body" style="opacity:1">Rainfall associated with strong upward atmospheric motion. It can produce intense rainfall and thunderstorms.</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker" style="color:#3F8FE8">Stratiform Rain</div>
+        <p class="card-body" style="opacity:1">Widespread, generally steady rainfall covering a larger area.</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker" style="color:#c99416">Shallow Rain</div>
+        <p class="card-body" style="opacity:1">Light precipitation produced by relatively shallow clouds.</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker" style="color:#8D9AA3">No Precipitation</div>
+        <p class="card-body" style="opacity:1">No significant precipitation is expected at this location.</p>
+      </div>
+    </div>
+
+    <hr class="hr">
+
+    <div class="card elev-sm" style="flex-direction:row;align-items:center;justify-content:space-between">
+      <div>
+        <div class="card-title">For researchers</div>
+        <p class="card-body" style="opacity:1;margin:4px 0 0">Model architecture, atmospheric channels and validation metrics are documented separately.</p>
+      </div>
+      <a href="Scientific-Information.dc.html" class="btn btn-secondary">Scientific Information</a>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Data files (large INSAT-3R satellite datasets)
+insat_data/*.h5
+!insat_data/README.md
+
+# Jupyter & Scratch
+.ipynb_checkpoints
+scratch/
+*.tmp
+*.log
+
+# Operating System
+.DS_Store
+Thumbs.db
