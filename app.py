@@ -5,6 +5,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from a2wsgi import WSGIMiddleware
 
+try:
+    import spaces
+    @spaces.GPU
+    def zero_gpu_heartbeat():
+        return "GPU Active"
+    try:
+        zero_gpu_heartbeat()
+    except Exception:
+        pass
+except ImportError:
+    pass
+
 # Insert server directory into Python path
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 SERVER_DIR = os.path.join(PROJECT_ROOT, "server")
