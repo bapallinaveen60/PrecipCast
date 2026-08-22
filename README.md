@@ -1,6 +1,8 @@
 # 🌧️ PRECIPCAST — INSAT-3R Deep Learning Precipitation Platform
 
 > **PrecipCast** is an end-to-end Deep Learning precipitation classification, sub-class identification, and web-based satellite visualization platform built for INSAT-3R satellite observation data across India.
+> 
+> 📌 **Project Status**: This repository represents **Phase 1 (Version 1.0)** of the PrecipCast platform development pipeline.
 
 ---
 
@@ -140,24 +142,6 @@ This starts the WSGI API server on `http://127.0.0.1:5000` and automatically ope
 | `GET /api/forecast` | `GET` | `filename` (optional) | Returns national rain coverage %, pixel counts, and confidence |
 | `GET /api/overlay` | `GET` | `filename`, `layer` (`rain`, `stratiform_convective`, `four_class`, `tir1`) | Generates transparent PNG overlay for Leaflet map tiles |
 | `GET /api/query` | `GET` | `lat`, `lon`, `filename` | Returns point predictions (rain status, prob, type, sub-class, TIR1 BT) |
-
-### Example Query Response (`GET /api/query?lat=28.61&lon=77.20`):
-```json
-{
-  "status": "success",
-  "location": { "lat": 28.61, "lon": 77.20 },
-  "prediction": {
-    "rain": "Rain",
-    "rain_val": 1,
-    "rain_probability": 78.4,
-    "stratiform_convective": "Stratiform Rain",
-    "four_class": "Shallow Convective (isolated)",
-    "four_class_val": 3,
-    "confidence": 78.4,
-    "tir1_bt": 274.5
-  }
-}
-```
 
 ---
 
