@@ -7,18 +7,20 @@
 <link rel="stylesheet" href="_ds/classical-38463c04-df64-4ddc-9866-488cc0d8938c/styles.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <style>
-  html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
   .brand-icon { color: #0288d1; flex: none; }
-  .nav-badges { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+  .nav-badges { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
   .badge { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 6px; color: #333; white-space: nowrap; background: #fff; }
   .badge svg { color: #0288d1; }
+  
+  /* Desktop Layout */
   .app-grid { display: grid; grid-template-columns: 310px 1fr 340px; grid-template-rows: 1fr auto; grid-template-areas: "sidebar map forecast" "timeline timeline timeline"; height: calc(100vh - 65px); }
   .sidebar { grid-area: sidebar; overflow-y: auto; padding: 16px; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fafafa; }
-  .map-wrap { grid-area: map; position: relative; background: #111827; }
+  .map-wrap { grid-area: map; position: relative; background: #111827; min-height: 400px; }
   #map { position: absolute; inset: 0; background: #111827; }
-  .map-title { position: absolute; top: 14px; left: 60px; z-index: 500; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .map-title { position: absolute; top: 14px; left: 60px; z-index: 500; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 6px; padding: 8px 14px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); max-width: calc(100% - 130px); }
   .map-north { position: absolute; top: 14px; right: 14px; z-index: 500; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
-  .legend { position: absolute; bottom: 20px; left: 14px; z-index: 500; width: 230px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .legend { position: absolute; bottom: 20px; left: 14px; z-index: 500; width: 230px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); max-width: calc(100% - 40px); }
   .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 6px; color: #222; }
   .legend-dot { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,0.1); }
   .forecast-panel { grid-area: forecast; overflow-y: auto; padding: 16px; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 16px; background: #fff; }
@@ -27,9 +29,9 @@
   .conf-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
   .loc-line { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #333; }
   .loc-line svg { color: #0288d1; flex: none; }
-  .timeline-bar { grid-area: timeline; border-top: 1px solid #e0e0e0; padding: 12px 20px; display: flex; align-items: center; gap: 16px; background: #fff; }
+  .timeline-bar { grid-area: timeline; border-top: 1px solid #e0e0e0; padding: 12px 20px; display: flex; align-items: center; gap: 16px; background: #fff; flex-wrap: wrap; }
   .tl-controls { display: flex; align-items: center; gap: 8px; flex: none; }
-  .tl-track-wrap { flex: 1; position: relative; padding-top: 18px; }
+  .tl-track-wrap { flex: 1; position: relative; padding-top: 18px; min-width: 250px; }
   .tl-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #666; padding: 4px 2px 0; }
   input[type="range"].tl-slider { width: 100%; accent-color: #0288d1; cursor: pointer; }
   .tl-now { position: absolute; top: -4px; font-size: 12px; font-weight: 700; color: #0288d1; transform: translateX(-50%); white-space: nowrap; background: #e1f5fe; padding: 2px 6px; border-radius: 4px; }
@@ -39,15 +41,49 @@
   .btn-primary:hover { background: #0277bd; }
   .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ccc; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
   .stat-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+  /* Tablet Responsiveness (768px - 1024px) */
+  @media (max-width: 1024px) {
+    .app-grid {
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: 1fr auto auto;
+      grid-template-areas:
+        "sidebar map"
+        "forecast forecast"
+        "timeline timeline";
+      height: auto;
+      min-height: calc(100vh - 65px);
+    }
+    .forecast-panel { border-left: none; border-top: 1px solid #e0e0e0; }
+  }
+
+  /* Mobile Responsiveness (< 768px) */
+  @media (max-width: 768px) {
+    header.nav { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px; }
+    .nav-badges { margin-left: 0; width: 100%; justify-content: space-between; }
+    .app-grid {
+      display: flex;
+      flex-direction: column;
+      height: auto;
+    }
+    .map-wrap { height: 420px; min-height: 420px; width: 100%; order: 1; }
+    .timeline-bar { order: 2; padding: 12px 14px; }
+    .sidebar { order: 3; border-right: none; border-bottom: 1px solid #e0e0e0; }
+    .forecast-panel { order: 4; border-top: none; }
+    .map-title { top: 10px; left: 50px; font-size: 12px; padding: 6px 10px; }
+    .legend { bottom: 10px; left: 10px; padding: 8px; width: 200px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
 
 <header class="nav" style="display:flex;align-items:center;padding:10px 20px;background:#fff;border-bottom:1px solid #e0e0e0">
-  <svg class="brand-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/></svg>
-  <div style="margin-left:10px">
-    <div style="font-weight:700;font-size:16px;color:#1a237e">PRECIPCAST</div>
-    <div style="font-size:11px;color:#666">INSAT-3R Satellite Deep Learning Precipitation Platform</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <svg class="brand-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A5 5 0 0 0 6.5 17"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/></svg>
+    <div>
+      <div style="font-weight:700;font-size:16px;color:#1a237e">PRECIPCAST</div>
+      <div style="font-size:11px;color:#666">INSAT-3R Satellite Deep Learning Precipitation Platform</div>
+    </div>
   </div>
   <div class="nav-badges">
     <span class="badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="header-date">19 Apr 2026</span></span>

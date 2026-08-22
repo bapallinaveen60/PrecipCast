@@ -4,11 +4,19 @@
 
 ---
 
+## 🎬 Application Preview & Demo
+
+![PrecipCast Platform Demo](INSAT_animation%20%282%29.gif)
+
+*Figure 1: Real-time INSAT-3R precipitation classification animation over India, demonstrating TIR1 thermal brightness temperature satellite imagery alongside Model 1 (Rain/No-Rain) and Model 3 (Sub-Classes including Shallow Rain) predictions.*
+
+---
+
 ## 📌 Project Overview
 
 PrecipCast processes multi-spectral Thermal Infrared (TIR) and Water Vapor (WV) satellite observations from ISRO's INSAT-3R geostationary satellite to perform high-resolution spatial rain detection and detailed cloud/precipitation type classification over the Indian subcontinent ($7.0^\circ\text{N} - 37.0^\circ\text{N}, 68.0^\circ\text{E} - 97.0^\circ\text{E}$).
 
-The platform features a **3-stage cascaded Deep Learning pipeline**, a lightweight **PyTorch dynamic inference engine**, a **Flask REST API server**, and an interactive **Leaflet web dashboard**.
+The platform features a **3-stage cascaded Deep Learning pipeline**, a lightweight **PyTorch dynamic inference engine**, a **Flask REST API server**, and a fully **responsive Leaflet web dashboard** (optimized for Desktop, Tablet, and Mobile devices).
 
 ---
 
@@ -18,14 +26,16 @@ The platform features a **3-stage cascaded Deep Learning pipeline**, a lightweig
   - **Stage 1 (Model 1)**: Binary Rain vs. No-Rain segmentation (`rain_norain_BT_New.keras`).
   - **Stage 2 (Model 2)**: Stratiform vs. Convective Rain classification (`stratiforn_convective_BT_only.keras`).
   - **Stage 3 (Model 3)**: Full 4-class rain sub-classification (`fourclasses_layernorm_BT_only.keras`), including **Shallow Convective Rain**.
+- **Fully Responsive Dashboard UI**:
+  - Seamless layout adaptation across mobile phones, tablets, and desktop displays.
 - **PyTorch Dynamic Graph Engine**:
-  - Automatically reconstructs Keras functional UNet graphs in PyTorch and loads weights directly from HDF5 archives (`model.weights.h5`), achieving zero DLL crashes and sub-second inference speeds.
+  - Reconstructs Keras functional UNet graphs in PyTorch and loads weights directly from HDF5 archives (`model.weights.h5`), achieving zero DLL crashes and sub-second inference speeds.
 - **Physical Brightness Temperature Calibration**:
   - Converts 10-bit raw integer count matrices (`IMG_TIR1`, `IMG_TIR2`, `IMG_WV`, `IMG_MIR`) into Kelvin Brightness Temperature arrays using lookup vectors (`IMG_TIR1_TEMP`, etc.).
   - Applies training-aligned physical normalization ($\text{clamp}[180\text{K}, 330\text{K}] \rightarrow [0.0, 1.0]$).
 - **Interactive Leaflet Dashboard**:
   - Layer toggles for Rain Mask, Stratiform/Convective, All Sub-Classes (incl. Shallow Rain), and 🛰️ TIR1 Thermal IR satellite imagery.
-  - Timeline player for observation playback.
+  - Timeline slider & playback animation controls.
   - Interactive location queries (state/city selection or map click) returning real-time point predictions and confidence metrics.
 
 ---
@@ -50,7 +60,7 @@ graph TD
     
     J --> L["MapOverlayGenerator: Transparent PNG Overlay"]
     K --> L
-    L --> M["🌐 Leaflet Interactive Map Dashboard"]
+    L --> M["🌐 Responsive Leaflet Map Dashboard"]
 ```
 
 ---
@@ -73,10 +83,10 @@ graph TD
 
 ```
 PrecipCast/
-├── index.html                   # Leaflet Interactive Web Dashboard Frontend
+├── index.html                   # Responsive Leaflet Interactive Web Dashboard
 ├── run.py                       # Top-level one-click launcher script
 ├── requirements.txt             # Python dependencies
-├── README.md                    # Project documentation
+├── README.md                    # Project documentation & demo preview
 ├── prediction_rain.ipynb        # Reference prediction and visualization notebook
 ├── INSAT_animation (2).gif      # Reference animation preview
 ├── server/
@@ -148,17 +158,6 @@ This starts the WSGI API server on `http://127.0.0.1:5000` and automatically ope
   }
 }
 ```
-
----
-
-## 🔬 Model Details & Training Specifications
-
-- **Input Specifications**: Tensor shape `(batch, 128, 128, 4)` consisting of:
-  1. `TIR1`: Thermal Infrared 1 ($10.3 - 11.3 \space \mu\text{m}$)
-  2. `TIR2`: Thermal Infrared 2 ($11.5 - 12.5 \space \mu\text{m}$)
-  3. `WV`: Water Vapor ($6.5 - 7.1 \space \mu\text{m}$)
-  4. `MIR`: Mid-Wave Infrared ($3.7 - 3.9 \space \mu\text{m}$)
-- **Geographical Extent**: India bounding box `7.0°N - 37.0°N`, `68.0°E - 97.0°E` (`Y=[686:1411]`, `X=[1138:1923]`).
 
 ---
 
